@@ -14,7 +14,7 @@
     <div class="container-fluid">
         <div class="jumbotron text-center">
             <h1>Mission to Msrs</h1>
-            <p><a class="btn btn-primary btn-lg" href="/scrape" role="button">Click Me!</a></p>
+            <p><a class="btn btn-primary btn-lg" href="/scrape" role="button">Scrape New Data</a></p>
         </div>
     </div>
     
@@ -30,12 +30,12 @@
         <div class="row">
             <div class="col-lg-6">
                 <h2>Featured Mars Image</h2>
-                <img src='{{ mars_data.featured_image }}' class="img-fluid" alt="Featured Image from NASA">
+                <img src='{{ mars_data.featured_image }}' class="img-fluid" alt="Featured Mars Image">
             </div>
 
             <!-- Fact Table-->
             <div class="col-lg-6">
-                <h1>Mars Facts:</h1>
+                <h2>Mars Facts:</h2>
                 <table class="table" {{ mars_data.html_table|safe }} ></table>
             </div>
         </div>
