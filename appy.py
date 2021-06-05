@@ -13,6 +13,7 @@ mongo = PyMongo(app)
 @app.route("/")
 def home():
 
+    # Scrape through functions
     mars_info = mongo.db.mars_info.find_one()
 
     # Return template and data
@@ -27,8 +28,8 @@ def scrape():
 
     # Run the scrape function
     mars_data = scrape_mars.scrape_mars_news()
-    mars_data = scrape_mars.scrape_mars_images()
     mars_f = scrape_mars.scrape_mars_facts()
+    mars_data = scrape_mars.scrape_mars_images()
     mars_data = scrape_mars.scrape_mars_hemi()
 
     # Update the Mongo database using update and upsert=True

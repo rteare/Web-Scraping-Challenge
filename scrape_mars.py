@@ -61,14 +61,14 @@ def scrape_mars_facts():
     # set up url for Mars Facts
     facts_url = "https://space-facts.com/mars/"
     browser.visit(facts_url)
-    time.sleep(3)
-
+    
     # Parse facts url to find tables
     facts_table = pd.read_html(facts_url)
     mars_table = facts_table[0]    
 
     # rename columns
     mars_table = mars_table.rename(columns = {0:'Description', 1:'Mars'})
+    mars_table = mars_table
     mars_table['Description'] = mars_table['Description'].str.replace(':','')
     mars_table
    
@@ -96,8 +96,8 @@ def scrape_mars_images():
 
     # Set up url for Mars Image
     base_url = "https://data-class-jpl-space.s3.amazonaws.com/JPL_Space/"
-    image_url = base_url + "index.html"
-    browser.visit(image_url)
+    url = base_url + "index.html"
+    browser.visit(url)
     time.sleep(3)
     html = browser.html
 
@@ -105,14 +105,14 @@ def scrape_mars_images():
     soup = bs(html, "html.parser")
 
     # scrape for image URL
-    feature_url = soup.find('a', class_='showimg fancybox-thumbs')['href']
-    feature_image_url = base_url + feature_url
+    image_url = soup.find('a', class_='showimg fancybox-thumbs')['href']
+    featured_image_url = base_url + image_url
 
     # print url
     # pprint(feature_image_url)
 
     # Add to dictionary
-    mars_info['image_url'] = feature_image_url
+    mars_info['image_url'] = featured_image_url
 
     return mars_info
     
@@ -127,8 +127,8 @@ def scrape_mars_hemi():
     browser = init_browser()
 
     # Set up url for Mars Hemisphere
-    hemi_url = "https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars"
-    browser.visit(hemi_url)
+    hemisphere_url = "https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars"
+    browser.visit(hemisphere_url)
     html = browser.html
     
     # beautifulSoup
@@ -140,7 +140,6 @@ def scrape_mars_hemi():
     # set base url
     hemi_base = 'https://astrogeology.usgs.gov'
 
-
     # List for hemi info storage
     hemi_image_urls = []
 
@@ -151,27 +150,31 @@ def scrape_mars_hemi():
         title = item.find('h3').text
 
         # link to hemi image
-        hemi_link = item.find('a', class_='itemLink product-item')['href']
+        hemi_full = item.find('a', class_='itemLink product-item')['href']
 
         # Set browser link
-        browser.visit(hemi_base + hemi_link)
-       
+        browser.visit(hemi_base + hemi_full)
+               
         # Set up url for Mars hemi image
-        hemi_html = browser.html
-        hemi_soup = bs(hemi_html, 'html.parser')
+        res_html = browser.html
+        hemi_soup = bs(res_html, 'html.parser')
+
+        # path to the hemi images
+        image_path = hemi_soup.find('img', class_='wide-image')['src']
 
         # URL for hemi images
-        hemi_url = hemi_base + hemi_soup.find('img', class_='wide-image')['src']
+        res_hemi_url = f'{hemi_base}{image_path}'
 
         # append title and image url to dictionary
         hemi_image_urls.append({
-            "title": title,
-             "img_url": hemi_url
-             })
+            "title": title, 
+            "img_url": res_hemi_url
+            })
 
     # print the hemispheres images
     # pprint(hemi_image_urls)
-        mars_info['hemi_image_urls'] = hemi_image_urls
+
+    mars_info['hemi_image_urls'] = hemi_image_urls
 
     return mars_info
     
