@@ -1,129 +1,181 @@
+# Set up dependencies
 import pandas as pd
-from pprint import pprint
+from pprint import pprint 
 import time
-from splinter import Browser
+import requests as req
 from bs4 import BeautifulSoup as bs
-import time
+from splinter import Browser
 from webdriver_manager.chrome import ChromeDriverManager
-import pandas as pd
 
 # Set browser
 def init_browser():
-    executable_path = {"executable_path": ChromeDriverManager().install()}
-    return Browser("chrome", **executable_path, headless=False)
-    time.sleep(5)
+    executable_path = {'executable_path': ChromeDriverManager().install()}
+    return Browser('chrome', **executable_path, headless=False)
 
-# time to Scape
+mars_info = {}
 
-def mars_scrape():
+# Mars News
+# ----------------------------------------
+def scrape_mars_news():
+
+    # initiaslize browser
     browser = init_browser()
 
     # set up url for Mars News
-    news_url = 'https://mars.nasa.gov/news/'
-    browser.visit(news_url)
-    time.sleep(2)
-    news_html = browser.html
+    url = 'https://mars.nasa.gov/news/'
+    browser.visit(url)
+    time.sleep(3)
+    html = browser.html
 
-    # parse with BeautifulSoup
-    news_soup = bs(news_html, 'html.parser')
+    # BeautifulSoup
+    soup = bs(html, 'html.parser')
 
     # find the latest news article
-    all_news_title = news_soup.find_all("div", class_="content_title")
-    latest_title = all_news_title[1].find("a").get_text()
+    slides = soup.find_all('li', class_='slide')
+    content_title = slides[0].find('div', class_ = 'content_title')
+    news_title = content_title.text.strip()
+    article_teaser_body = slides[0].find('div', class_ = 'article_teaser_body')
+    news_article = article_teaser_body.text.strip()
+    
+    # print article title and paragraph text
+    #pprint(news_title)
+    #pprint(news_article)
 
-    # latest article paragraph text
-    all_news_para = news_soup.find_all("div", class_="article_teaser_body")
-    latest_para = all_news_para[0].get_text()
+    # Add to scrape dictionary
+    mars_info['news_title'] = news_title
+    mars_info['news_article'] = news_article
 
-    # print article title and  paragraph text
-    pprint(latest_title)
-    pprint(latest_para)
+    return mars_info
+    
+    # close the browser
+    browser.quit()
+
+
+# Mars Facts
+# ---------------------------------------
+def scrape_mars_facts():
+
+    # initiaslize browser
+    browser = init_browser()
 
     # set up url for Mars Facts
     facts_url = "https://space-facts.com/mars/"
     browser.visit(facts_url)
-    time.sleep(2)
+    time.sleep(3)
 
     # Parse facts url to find tables
-    facts_tables = pd.read_html(facts_url)
-    mars_table = facts_tables[0]    
+    facts_table = pd.read_html(facts_url)
+    mars_table = facts_table[0]    
 
     # rename columns
-    mars_table.columns = ["Description", "Mars"]
-    mars_table = mars_table.set_index("Description")
-
+    mars_table = mars_table.rename(columns = {0:'Description', 1:'Mars'})
+    mars_table['Description'] = mars_table['Description'].str.replace(':','')
+    mars_table
+   
     # convert data to html
-    html_table = mars_table.to_html()
-    html_table = html_table.replace('\n', '')
+    html_table = mars_table.to_html(table_id="html_tbl_css",justify='left',index=False)
     
     # print table
-    pprint(html_table)
+    #pprint(html_table)
+    
+    # Add to dictionary
+    mars_info['mars_tables'] = html_table
+
+    return mars_info
+
+    # close the browser
+    browser.quit
+
+# Mars Image
+# ----------------------------------------
+
+def scrape_mars_images():
+
+    # Initialize browser
+    browser = init_browser()
 
     # Set up url for Mars Image
-    image_url = "https://data-class-jpl-space.s3.amazonaws.com/JPL_Space/index.html"
+    base_url = "https://data-class-jpl-space.s3.amazonaws.com/JPL_Space/"
+    image_url = base_url + "index.html"
     browser.visit(image_url)
-    time.sleep(2)
-
-    # Set new browser link
-    browser.links.find_by_partial_text('FULL IMAGE').first.click()
-    time.sleep(2) 
-    full_image_html = browser.html
+    time.sleep(3)
+    html = browser.html
 
     # parse with BeautifulSoup
-    image_soup = bs(full_image_html, "html.parser")
+    soup = bs(html, "html.parser")
 
-    # scrape the URL
-    feature_url = image_soup.find('img')['src']
-
-    # print the url for the full image version of the Featured Mars Image
-    base_url = 'https://data-class-jpl-space.s3.amazonaws.com/JPL_Space/'
-    featured_image_url = f'{base_url}{feature_url}'
+    # scrape for image URL
+    feature_url = soup.find('a', class_='showimg fancybox-thumbs')['href']
+    feature_image_url = base_url + feature_url
 
     # print url
-    pprint(featured_image_url)
+    # pprint(feature_image_url)
+
+    # Add to dictionary
+    mars_info['image_url'] = feature_image_url
+
+    return mars_info
+    
+    # close the browser
+    browser.quit
+
+# Mars Hemisphere
+# ----------------------------------------
+def scrape_mars_hemi():
+
+    # Initialize browser
+    browser = init_browser()
 
     # Set up url for Mars Hemisphere
     hemi_url = "https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars"
     browser.visit(hemi_url)
-    time.sleep(2)
-    hemi_html = browser.html
+    html = browser.html
+    
+    # beautifulSoup
+    soup = bs(html, "html.parser")
 
-    # list for titles and image urls
-    hemi_scrape = []
+    # retrievethe hemi info
+    hemi_items = soup.find_all('div', class_='item')
+    
+    # set base url
+    hemi_base = 'https://astrogeology.usgs.gov'
+
+
+    # List for hemi info storage
+    hemi_image_urls = []
 
     # Loop for hemisphere info
-    for i in range(4):
+    for item in hemi_items:
+        
+        # store items
+        title = item.find('h3').text
+
+        # link to hemi image
+        hemi_link = item.find('a', class_='itemLink product-item')['href']
+
+        # Set browser link
+        browser.visit(hemi_base + hemi_link)
+       
+        # Set up url for Mars hemi image
         hemi_html = browser.html
-        hemi_soup = bs(hemi_html, "html.parser")
+        hemi_soup = bs(hemi_html, 'html.parser')
 
-        title = hemi_soup.find_all("h3")[i].get_text()
-        browser.find_by_tag('h3')[i].click()
-
-        hemi_html = browser.html
-        hemi_soup = bs(hemi_html, "html.parser")
-
-        hemi_url = hemi_soup.find("a", text="Sample")["href"]
+        # URL for hemi images
+        hemi_url = hemi_base + hemi_soup.find('img', class_='wide-image')['src']
 
         # append title and image url to dictionary
-        hemi_scrape.append({
-            "Title": title,
-            "Link to image": hemi_url
-        })
-    
-    # print the hemispheres images
-    pprint(hemi_scrape)
+        hemi_image_urls.append({
+            "title": title,
+             "img_url": hemi_url
+             })
 
+    # print the hemispheres images
+    # pprint(hemi_image_urls)
+        mars_info['hemi_image_urls'] = hemi_image_urls
+
+    return mars_info
+    
     # close the browser
     browser.quit()
 
-    # Scraped Dictionary
-
-    mars_scrape_data = {
-        'latest_title': latest_title,
-        'latest_para' : latest_para,
-        'html_table': html_table,
-        'featured_image': featured_image_url,
-        'hemi_scrape': hemi_scrape
-    }
-
-    return mars_scrape_data
+print("Data Uploaded!")

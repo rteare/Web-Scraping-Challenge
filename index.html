@@ -1,67 +1,78 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Mission to Mars</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" \
         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
 </head>
 
 <body>
-    <div class="container-fluid">
+    <div class="container">
+
+        <!-- Jumbotron -->
         <div class="jumbotron text-center">
-            <h1>Mission to Msrs</h1>
+            <h1 style=" font-weight: bolder"> Mission to Mars</h1>
             <p><a class="btn btn-primary btn-lg" href="/scrape" role="button">Scrape New Data</a></p>
         </div>
-    </div>
-    
-    <!-- Mars News-->
-    <div class="container">
-        <h2>Latest Mars News</h2>
-        <h3>{{ mars_data.latest_title }}</h3>
-        <p>{{ mars_data.latest_para }}</p>
-    </div>
-
-    <!-- Mars News-->
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-6">
-                <h2>Featured Mars Image</h2>
-                <img src='{{ mars_data.featured_image }}' class="img-fluid" alt="Featured Mars Image">
-            </div>
-
-            <!-- Fact Table-->
-            <div class="col-lg-6">
-                <h2>Mars Facts:</h2>
-                <table class="table" {{ mars_data.html_table|safe }} ></table>
-            </div>
+        <br>
+        
+        <!-- Mars News -->
+        <div class="container">
+            <h1 style=" font-weight: bolder">Latest Mars News</h1>
+            <h4 style=" font-weight: bolder">{{ mars_info.news_title }}</h4>
+            <p>{{ mars_info.news_article }}</p>
         </div>
-    </div>
 
-    <!-- Mars Hemospheres-->
-    <div class="container text-center">
-        <div class="row">
-            <h2>Mars Hemispheres</h2>
+        <div class="container">
             <div class="row">
-                {% for dict in mars_data.hemi_scrape %}
-                <div class="col-lg-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h4 class="card-title">{{ dict.title }}</h4>
-                            <img src='{{ dict.image_url }}' class="img-fluid" alt={{ dict.title }}>
-                        </div>
-                    </div>
+                <!--Image-->
+                <div class="col-lg-8 col-md-8 col-sm-12">
+                    <h1 style=" font-weight: bolder">Featured Mars Image</h1>
+                    <img src="{{ mars_info.image_url }}" alt="Mars Featured Image">
                 </div>
 
-                {% endfor %}
-
+                <!-- Facts -->
+                <div class="col-lg-4 col-md-4 col-sm-12">
+                    <!-- Table -->
+                    <br>
+                    <h3 style=" font-weight: bolder">Mars Facts</h3>
+                    <div>
+                        {{mars_info.mars_tables | safe}}
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+        <hr>
 
+        <!-- hemis -->
+        <div class="row">
+            <div class="col-md-8 offset-4">
+                <h1 class="align-items-center" style=" font-weight: bolder">Mars Hemispheres</h1>  
+            </div>
+        </div>
+
+        <div class="card-deck">
+            <hr>
+            <div class="col-md-12">
+                <div class="row">
+                    {% for item in mars_info.hemi_image_urls %}
+                    <div class="col-md-6">
+                        <div class="img-responsive" style="margin: 30px;">
+                            <img class="card-img-top" src="{{ item.img_url }}" />
+                            <div class="card-body">
+                                <h2 class="card-text">{{ item.title }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
 </body>
 
 </html>
